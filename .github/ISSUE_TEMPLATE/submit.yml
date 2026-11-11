@@ -1,0 +1,85 @@
+name: 投稿
+description: 把作品冲上百宝湾的岸。不会用 GitHub 也可以，维护者会帮你整理上架。
+title: "投稿：作品名"
+labels: ["投稿"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: 作品名
+    validations:
+      required: true
+  - type: input
+    id: summary
+    attributes:
+      label: 一句话介绍
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - 小镇插件包（.mimi-app.json）
+        - 远程 MCP
+        - 网页小玩意
+        - 需要自己部署
+        - 适配包（让别人的作品接进小镇）
+    validations:
+      required: true
+  - type: dropdown
+    id: rating
+    attributes:
+      label: 分级
+      options:
+        - 全年龄
+        - 深水区（成人向）
+    validations:
+      required: true
+  - type: dropdown
+    id: origin
+    attributes:
+      label: 来源
+      options:
+        - 我自己做的
+        - 转载别人的作品
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: 原作者
+      description: 转载时写原作者，不是你自己。
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 源码或主页地址
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: 许可
+      description: 原作没写许可就填“没有”，这时只能收录链接。
+    validations:
+      required: true
+  - type: textarea
+    id: install
+    attributes:
+      label: 怎么装
+      description: 插件包下载地址、MCP 地址、网页地址或部署说明，任选适用的。插件包也可以直接拖进这里上传。
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: 规矩
+      options:
+        - label: 不涉及未成年人和真实存在的人
+          required: true
+        - label: 不收集使用者的密钥、聊天或私人资料
+          required: true
+        - label: 不放付款、打赏链接
+          required: true
