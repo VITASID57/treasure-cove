@@ -1,0 +1,2 @@
+*.mimi-app.json text eol=lf
+entries/**/*.json text eol=lf
