@@ -31,6 +31,7 @@ input[type=search]{width:100%;padding:11px 14px;border:1px solid var(--line);bor
 .tag.deep{background:var(--deep);color:#fff}
 .card p{margin:0}
 .card ul{margin:0;padding-left:20px;color:var(--muted);font-size:15px}
+.preview{margin:0;display:grid;gap:6px}
 .card img{width:100%;border-radius:10px;border:1px solid var(--line)}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 .actions a,.actions button{min-height:40px;display:inline-flex;align-items:center;padding:0 14px;border-radius:10px;border:1px solid var(--sea);color:var(--sea);background:transparent;font:inherit;font-size:15px;text-decoration:none;cursor:pointer}
@@ -109,15 +110,20 @@ function card(entry) {
     ? `原作：${entry.author.name}${entry.submitter ? ` · ${entry.kind === 'adapter' ? '适配' : '投稿'}：${entry.submitter}` : ''}`
     : `作者：${entry.author.name}`;
   const notes = [by, `许可：${entry.license === 'none' ? '原作未写许可，仅收录链接' : entry.license}`, `版本 ${entry.version}`, entry.updated];
+  const isTownPlugin = entry.kind === 'town-plugin' || Boolean(entry.install?.package);
   const body = el('article', { className: `card${adult ? ' adult' : ''}` }, el('h2', { textContent: entry.name }), meta,
     el('p', { textContent: entry.summary }),
     entry.highlights?.length ? el('ul', {}, ...entry.highlights.map((item) => el('li', { textContent: item }))) : null,
-    entry.screenshot ? el('img', { src: entry.screenshot, alt: '', loading: 'lazy' }) : null,
+    entry.screenshot ? el('figure', { className: 'preview' },
+      el('figcaption', { className: 'note', textContent: isTownPlugin
+        ? '插件界面示意图 · 安装后在棉棉云小镇内操作'
+        : '界面示意图' }),
+      el('img', { src: entry.screenshot, alt: '', loading: 'lazy' })) : null,
     actions(entry),
     el('div', { className: 'note', textContent: notes.join(' · ') }),
     entry.install?.sha256 ? el('div', { className: 'note', textContent: `插件包指纹 ${entry.install.sha256}` }) : null,
     entry.forkOf ? el('div', { className: 'note', textContent: `这是复制版，原版在 ${entry.forkOf}` }) : null,
-    entry.kind === 'town-plugin' || entry.install?.package ? el('div', { className: 'note', textContent: '在小镇「插件中心 → 添加插件 → 从文件安装」导入下载的插件包。' }) : null);
+    isTownPlugin ? el('div', { className: 'note', textContent: '在小镇「插件中心 → 添加插件 → 从文件安装」导入下载的插件包。' }) : null);
   return body;
 }
 
