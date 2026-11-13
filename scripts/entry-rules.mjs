@@ -53,7 +53,10 @@ export function entryProblems(entry, folder) {
     || (https(install.package) || /^[\w.-]+\.mimi-app\.json$/u.test(install.package));
   need(packageOk, 'install.package 要是 https 地址，或文件夹里的 .mimi-app.json 文件名');
   need(install.package === undefined || SHA.test(install.sha256 ?? ''), '写了 install.package 就要写 install.sha256（64 位小写十六进制）');
-  for (const key of ['mcpUrl', 'webUrl', 'guide']) need(install[key] === undefined || https(install[key]), `install.${key} 要是 https 地址`);
+  for (const key of ['mcpUrl', 'webUrl', 'guide', 'webGuide', 'mcpGuide', 'pluginGuide']) {
+    need(install[key] === undefined || https(install[key]), `install.${key} 要是 https 地址`);
+  }
+  need(install.pluginGuide === undefined || Boolean(install.package), '写了 install.pluginGuide 就要提供插件包');
   const has = { 'town-plugin': install.package, 'remote-mcp': install.mcpUrl, 'web-app': install.webUrl, 'self-host': install.guide,
     adapter: install.package ?? install.mcpUrl ?? install.webUrl ?? install.guide };
   need(Boolean(has[entry.kind]), `kind 是 ${entry.kind} 时，install 里缺少对应的地址`);

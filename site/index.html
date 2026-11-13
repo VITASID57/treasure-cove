@@ -34,8 +34,12 @@ input[type=search]{width:100%;padding:11px 14px;border:1px solid var(--line);bor
 .preview{margin:0;display:grid;gap:6px}
 .card img{width:100%;border-radius:10px;border:1px solid var(--line)}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
-.actions a,.actions button{min-height:40px;display:inline-flex;align-items:center;padding:0 14px;border-radius:10px;border:1px solid var(--sea);color:var(--sea);background:transparent;font:inherit;font-size:15px;text-decoration:none;cursor:pointer}
+.actions a,.actions button{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border-radius:10px;border:1px solid var(--sea);color:var(--ink);background:transparent;font:inherit;font-size:15px;text-decoration:none;cursor:pointer}
 .actions .primary{background:var(--sea);color:#fff}
+.entry-points{display:grid;gap:8px}
+.entry-point{display:grid;gap:3px}
+.entry-point .actions{align-items:center}
+.card .source{color:var(--ink);text-underline-offset:3px}
 .note{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .empty{text-align:center;color:var(--muted);padding:40px 0}
 dialog{border:none;border-radius:var(--radius);background:var(--paper);color:var(--ink);max-width:min(420px,calc(100vw - 32px));padding:22px}
@@ -91,14 +95,39 @@ function toggleDeep() {
 $('deep-no').onclick = () => $('deep-ask').close();
 $('deep-yes').onclick = () => { remember(); state.deep = true; $('deep-ask').close(); render(); };
 
-function actions(entry) {
-  const box = el('div', { className: 'actions' }); const i = entry.install || {};
-  if (i.package) box.append(el('a', { className: 'primary', href: i.package, download: '', textContent: '下载插件包' }));
-  if (i.mcpUrl) { const b = el('button', { className: 'primary', type: 'button', textContent: '复制 MCP 地址' }); b.onclick = () => copy(i.mcpUrl); box.append(b); }
-  if (i.webUrl) box.append(el('a', { className: 'primary', href: i.webUrl, target: '_blank', rel: 'noopener', textContent: '打开' }));
-  if (i.guide) box.append(el('a', { href: i.guide, target: '_blank', rel: 'noopener', textContent: '部署说明' }));
-  box.append(el('a', { href: entry.source, target: '_blank', rel: 'noopener', textContent: '查看源码' }));
+function link(label, href) {
+  return el('a', { href, target: '_blank', rel: 'noopener', textContent: label });
+}
+
+function entryPoints(entry) {
+  const i = entry.install;
+  const box = el('div', { className: 'entry-points' });
+  const add = (note, ...controls) => {
+    if (!box.childElementCount) controls[0].classList.add('primary');
+    box.append(el('div', { className: 'entry-point' }, el('div', { className: 'actions' }, ...controls),
+      note ? el('p', { className: 'note', textContent: note }) : null));
+  };
+  if (i.webUrl) add('', link('打开网页', i.webUrl));
+  if (i.guide) add(i.webGuide ? '部署完成后，在浏览器打开自己的实例。' : '', link('部署说明', i.guide));
+  if (i.webGuide) add('', link('网页使用说明', i.webGuide));
+  if (i.mcpUrl) {
+    const button = el('button', { type: 'button', textContent: '复制 MCP 地址' });
+    button.onclick = () => copy(i.mcpUrl);
+    add('在支持远程 MCP 的客户端粘贴地址。', button, i.mcpGuide && link('MCP 接入说明', i.mcpGuide));
+  } else if (i.mcpGuide) {
+    add('先部署，再连接自己的 MCP 地址。', link('MCP 接入说明', i.mcpGuide));
+  }
+  if (i.package) add(`${entry.kind === 'self-host' ? '部署完成后，在' : '在'}小镇「插件中心 → 添加插件 → 从文件安装」导入。`,
+    el('a', { href: i.package, download: '', textContent: '下载小镇插件' }),
+    i.pluginGuide && link('插件使用说明', i.pluginGuide));
   return box;
+}
+
+function matchesKind(entry, kind) {
+  const i = entry.install;
+  const available = { 'town-plugin': i.package, 'remote-mcp': i.mcpUrl || i.mcpGuide,
+    'web-app': i.webUrl || i.webGuide, 'self-host': i.guide };
+  return kind === 'all' || entry.kind === kind || Boolean(available[kind]);
 }
 
 function card(entry) {
@@ -114,16 +143,16 @@ function card(entry) {
   const body = el('article', { className: `card${adult ? ' adult' : ''}` }, el('h2', { textContent: entry.name }), meta,
     el('p', { textContent: entry.summary }),
     entry.highlights?.length ? el('ul', {}, ...entry.highlights.map((item) => el('li', { textContent: item }))) : null,
+    entryPoints(entry),
     entry.screenshot ? el('figure', { className: 'preview' },
       el('figcaption', { className: 'note', textContent: isTownPlugin
         ? '插件界面示意图 · 安装后在棉棉云小镇内操作'
         : '界面示意图' }),
       el('img', { src: entry.screenshot, alt: '', loading: 'lazy' })) : null,
-    actions(entry),
+    Object.assign(link('查看源码', entry.source), { className: 'source' }),
     el('div', { className: 'note', textContent: notes.join(' · ') }),
     entry.install?.sha256 ? el('div', { className: 'note', textContent: `插件包指纹 ${entry.install.sha256}` }) : null,
-    entry.forkOf ? el('div', { className: 'note', textContent: `这是复制版，原版在 ${entry.forkOf}` }) : null,
-    isTownPlugin ? el('div', { className: 'note', textContent: '在小镇「插件中心 → 添加插件 → 从文件安装」导入下载的插件包。' }) : null);
+    entry.forkOf ? el('div', { className: 'note', textContent: `这是复制版，原版在 ${entry.forkOf}` }) : null);
   return body;
 }
 
@@ -131,7 +160,7 @@ function render() {
   chips();
   const q = state.query.trim().toLowerCase();
   const shown = state.entries.filter((entry) => (state.deep || entry.rating !== 'adult')
-    && (state.kind === 'all' || entry.kind === state.kind)
+    && matchesKind(entry, state.kind)
     && (!q || [entry.name, entry.summary, ...(entry.tags || []), entry.author?.name].join(' ').toLowerCase().includes(q)));
   $('list').replaceChildren(...(shown.length ? shown.map(card) : [el('p', { className: 'empty', textContent: state.entries.length ? '这里还没有冲上岸的东西。' : '正在退潮……' })]));
 }

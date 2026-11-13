@@ -10,6 +10,16 @@ const good = {
 
 test('a complete entry passes', () => assert.deepEqual(entryProblems(good, 'demo'), []));
 
+test('a self-hosted entry can offer web, MCP and plugin guides on one card', () => {
+  const install = { guide: 'https://example.com/deploy', webGuide: 'https://example.com/web',
+    mcpGuide: 'https://example.com/mcp', pluginGuide: 'https://example.com/plugin',
+    package: 'demo.mimi-app.json', sha256: 'a'.repeat(64) };
+  const entry = { ...good, kind: 'self-host', install };
+  assert.deepEqual(entryProblems(entry, 'demo'), []);
+  assert.match(entryProblems({ ...entry, install: { ...install, mcpGuide: 'http://example.com' } }, 'demo').join(), /mcpGuide/u);
+  assert.match(entryProblems({ ...entry, install: { ...install, package: undefined } }, 'demo').join(), /提供插件包/u);
+});
+
 test('kind-specific install fields are required', () => {
   assert.match(entryProblems({ ...good, kind: 'town-plugin' }, 'demo').join(), /install 里缺少/u);
   assert.match(entryProblems({ ...good, kind: 'town-plugin', install: { package: 'x.mimi-app.json' } }, 'demo').join(), /sha256/u);
